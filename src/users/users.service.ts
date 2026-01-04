@@ -3,9 +3,9 @@ import { db } from 'src/db/drizzle';
 import { usersTable } from 'src/db/schema';
 
 const user: typeof usersTable.$inferInsert = {
-    name: 'John',
-    age: 30,
-    email: 'john@example.com',
+    name: 'Muhammadali',
+    age: 18,
+    email: 'muhammadali.jamolov@gmail.com',
 };
 
 @Injectable()
@@ -14,9 +14,10 @@ export class UsersService {
     async findAll() {
         return await db.select().from(usersTable);
         // return { message: "Hello world!!!" }
-    }
+    };
 
     async create() {
-        return await db.insert(usersTable).values(user);
-    }
+        let createdUser = await db.insert(usersTable).values(user);
+        return { message: "user created", "user": createdUser };
+    };
 };
