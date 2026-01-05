@@ -11,9 +11,4 @@ export class UsersController {
     findAll() {
         return this.usersService.findAll();
     };
-
-    @Post()
-    create() {
-        return this.usersService.create();
-    };
 };
