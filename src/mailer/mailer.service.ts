@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transporter } from "nodemailer";
 import * as nodemailer from "nodemailer";
+import "dotenv/config"
 
 @Injectable()
 export class MailerService {
@@ -11,8 +12,8 @@ export class MailerService {
         this.transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS,
             },
         });
     };
@@ -20,7 +21,7 @@ export class MailerService {
     async sendMail(to: string, html: string, subject: string) {
         try {
             const info = await this.transporter.sendMail({
-                from: process.env.EMAIL_USER,
+                from: process.env.MAIL_USER,
                 to,
                 subject,
                 html,
