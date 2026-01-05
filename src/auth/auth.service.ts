@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { signUpDto } from './dto/sign-up.dto';
 import { db } from 'src/db/drizzle';
 import { usersTable } from 'src/db/schema';
@@ -12,10 +12,10 @@ const LONG_EXPIRE_DATE = "23d";
 export class AuthService {
     async signUp(signUpDto: signUpDto) {
         const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, signUpDto.email));
-        if (existingUser) {
-            return { user: existingUser };
-        }else{
-            return {message: "User not found."}
-        }
+        if (existingUser.length > 0) {
+            throw new ConflictException("User already exists.");
+        };
+
+        
     };
 };
