@@ -2,10 +2,11 @@ import { ConflictException, Injectable, NotFoundException, UnauthorizedException
 import { db } from 'src/db/drizzle';
 import { usersTable } from 'src/db/schema';
 import { eq } from 'drizzle-orm';
-import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import { MailerService } from 'src/mailer/mailer.service';
 import { signUpDto } from './dto/sign-up.dto';
 import { signInDto } from './dto/sign-in.dto';
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
 const SHORT_EXPIRE_DATE = "5m";
 const LONG_EXPIRE_DATE = "23d";
@@ -17,7 +18,7 @@ export class AuthService {
         private mailer: MailerService,
     ) { }
 
-    sendMailFunction(token: string, email: string, method) {
+    sendMailFunction(token: string, email: string, method: "sign-up" | "sign-in") {
         const link = `${process.env.FRONTEND_URL}/auth/${method}?token=${token}`;
         this.mailer.sendMail(
             email,
@@ -30,6 +31,13 @@ export class AuthService {
         };
     };
 
+    accessTokenFunction(user: { id: number, email: string, name: string }) {
+        return this.jwtService.sign({
+            id: user.id,
+            email: user.email,
+        }, { expiresIn: LONG_EXPIRE_DATE });
+    };
+
     async signUp(signUpDto: signUpDto) {
         const method = "sign-up";
         const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, signUpDto.email));
@@ -38,7 +46,7 @@ export class AuthService {
             throw new ConflictException("User already exists.");
         };
 
-        const token = await this.jwtService.signAsync({
+        const token = await this.jwtService.sign({
             email: signUpDto.email,
             name: signUpDto.name,
             method,
@@ -55,7 +63,7 @@ export class AuthService {
             throw new NotFoundException("User not found.");
         };
 
-        const token = await this.jwtService.signAsync({
+        const token = await this.jwtService.sign({
             email: signInDto.email,
             method,
         }, { expiresIn: SHORT_EXPIRE_DATE });
@@ -74,12 +82,22 @@ export class AuthService {
                     throw new ConflictException("User already exists.");
                 };
 
-                await db.insert(usersTable).values({
+                const [newUser] = await db.insert(usersTable).values({
                     name: payload.name,
                     email: payload.email,
-                });
+                }).returning();
 
-                return { message: "User created successfully." };
+                return { accessToken: this.accessTokenFunction(newUser) };
+            };
+
+            if (payload.method === "sign-in") {
+                const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, payload.email));
+
+                if (existingUser.length === 0) {
+                    throw new NotFoundException("User not Found.");
+                };
+
+                return { accessToken: this.accessTokenFunction(existingUser[0]) };
             };
         } catch (error) {
             if (error instanceof TokenExpiredError) {
