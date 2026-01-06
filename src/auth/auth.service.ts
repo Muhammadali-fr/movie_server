@@ -111,4 +111,8 @@ export class AuthService {
             throw new UnauthorizedException('Unauthorized.');
         };
     };
+
+    async profile(token:string){
+        
+    };
 };
