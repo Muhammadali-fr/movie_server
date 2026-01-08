@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { signUpDto } from './dto/sign-up.dto';
 import { AuthService } from './auth.service';
 import { signInDto } from './dto/sign-in.dto';
+import { AuthGuard } from './guards/auth.guard';
+import type { IUser } from './types/user-type';
 
 @Controller('auth')
 export class AuthController {
@@ -25,9 +27,15 @@ export class AuthController {
 
     @Get("verify-token")
     verifyToken(
-        @Query() data: {token:string},
+        @Query() data: { token: string },
     ) {
         const token = data.token;
         return this.authService.verifyToken(token);
-    }
+    };
+
+    @UseGuards(AuthGuard)
+    @Get("profile")
+    profile(@Req() user: IUser) {
+        return this.authService.profile(user);
+    };
 };

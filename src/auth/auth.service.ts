@@ -7,6 +7,7 @@ import { MailerService } from 'src/mailer/mailer.service';
 import { signUpDto } from './dto/sign-up.dto';
 import { signInDto } from './dto/sign-in.dto';
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import { IUser } from './types/user-type';
 
 const SHORT_EXPIRE_DATE = "5m";
 const LONG_EXPIRE_DATE = "23d";
@@ -18,7 +19,7 @@ export class AuthService {
         private mailer: MailerService,
     ) { }
 
-    sendMailFunction(token: string, email: string, method: "sign-up" | "sign-in") {
+    sendMagicLink(token: string, email: string, method: "sign-up" | "sign-in") {
         const link = `${process.env.FRONTEND_URL}/auth/${method}?token=${token}`;
         this.mailer.sendMail(
             email,
@@ -31,7 +32,7 @@ export class AuthService {
         };
     };
 
-    accessTokenFunction(user: { id: number, email: string, name: string }) {
+    generateAccessToken(user: IUser) {
         return this.jwtService.sign({
             id: user.id,
             email: user.email,
@@ -46,13 +47,13 @@ export class AuthService {
             throw new ConflictException("User already exists.");
         };
 
-        const token = await this.jwtService.sign({
+        const token = this.jwtService.sign({
             email: signUpDto.email,
             name: signUpDto.name,
             method,
         }, { expiresIn: SHORT_EXPIRE_DATE });
 
-        return this.sendMailFunction(token, signUpDto.email, method);
+        return this.sendMagicLink(token, signUpDto.email, method);
     };
 
     async signIn(signInDto: signInDto) {
@@ -63,12 +64,12 @@ export class AuthService {
             throw new NotFoundException("User not found.");
         };
 
-        const token = await this.jwtService.sign({
+        const token = this.jwtService.sign({
             email: signInDto.email,
             method,
         }, { expiresIn: SHORT_EXPIRE_DATE });
 
-        return this.sendMailFunction(token, signInDto.email, method);
+        return this.sendMagicLink(token, signInDto.email, method);
     };
 
     async verifyToken(token: string) {
@@ -87,7 +88,7 @@ export class AuthService {
                     email: payload.email,
                 }).returning();
 
-                return { accessToken: this.accessTokenFunction(newUser) };
+                return { accessToken: this.generateAccessToken(newUser) };
             };
 
             if (payload.method === "sign-in") {
@@ -97,7 +98,7 @@ export class AuthService {
                     throw new NotFoundException("User not Found.");
                 };
 
-                return { accessToken: this.accessTokenFunction(existingUser[0]) };
+                return { accessToken: this.generateAccessToken(existingUser[0]) };
             };
         } catch (error) {
             if (error instanceof TokenExpiredError) {
@@ -112,7 +113,11 @@ export class AuthService {
         };
     };
 
-    async profile(token:string){
-        
+    async profile(IUser: IUser) {
+        const user = await db.select().from(usersTable).where(eq(usersTable.email, IUser.email));
+        if (user.length === 0) {
+            throw new NotFoundException('user not found');
+        };
+        return user;
     };
 };
