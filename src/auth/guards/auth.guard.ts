@@ -19,12 +19,12 @@ export class AuthGuard implements CanActivate {
         if (type !== 'Bearer' || !token) {
             throw new UnauthorizedException('Token toplmadi (Bearer header yoq)');
         }
-        
-        try {   
-            const decoded = this.jwtService.verifyAsync(token);
+
+        try {
+            const decoded = await this.jwtService.verifyAsync(token);
             request.user = decoded;
             return true;
-        } catch (error)     {
+        } catch (error) {
             throw new UnauthorizedException('Token notogri');
         };
     };
