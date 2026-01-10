@@ -3,7 +3,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { MailerModule } from 'src/mailer/mailer.module';
-import "dotenv/config";
+import { TokenService } from './token.service';
+import "dotenv/config"; 
+import { SendAuthMagicLink } from './magic-link.service';
+import { AuthRepositoryService } from './auth-repository';
 
 @Module({
   imports: [
@@ -14,6 +17,6 @@ import "dotenv/config";
     MailerModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService]
+  providers: [AuthService,TokenService, SendAuthMagicLink, AuthRepositoryService]
 })
 export class AuthModule { }

@@ -1,44 +1,38 @@
 import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { db } from 'src/db/drizzle';
-import { usersTable } from 'src/db/schema';
-import { eq } from 'drizzle-orm';
 import { signUpDto } from './dto/sign-up.dto';
 import { signInDto } from './dto/sign-in.dto';
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { IUser } from './types/user-type';
 import { TokenService } from './token.service';
 import { SendAuthMagicLink } from './magic-link.service';
-import { AuthRepository } from './auth-repository';
+import { AuthRepositoryService } from './auth-repository';
 
-let METHOD: "sign-in" | "sign-up" | null = null;
 
 @Injectable()
 export class AuthService {
     constructor(
         private tokenService: TokenService,
         private magicLinkService: SendAuthMagicLink,
-        private authRepo: AuthRepository
+        private authRepo: AuthRepositoryService
     ) { }
 
     async signUp(signUpDto: signUpDto) {
-        METHOD = "sign-up";
+        const METHOD: "sign-up" = "sign-up";
         const existingUser = await this.authRepo.findByEmail(signUpDto.email);
-
         if (existingUser.length > 0) {
             throw new ConflictException("User already exists.");
         };
 
-        const user = existingUser[0];
-        const token = this.tokenService.magicLinkToken({ name: user.name, email: user.email, method: METHOD });
-        return this.magicLinkService.sendMagicLink({ token, email: user.email });
+        const token = this.tokenService.magicLinkToken({ name: signUpDto.name, email: signUpDto.email, method: METHOD });
+        return this.magicLinkService.sendMagicLink({ token, email: signUpDto.email });
     };
 
     async signIn(signInDto: signInDto) {
-        METHOD = "sign-in";
-        const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, signInDto.email));
+        const METHOD: "sign-in" = "sign-in";
+        const existingUser = await this.authRepo.findByEmail(signInDto.email);
 
         if (existingUser.length === 0) {
-            throw new NotFoundException("User not found.");
+            throw new UnauthorizedException("Invalid credentials.");
         };
 
         const user = existingUser[0];
@@ -49,26 +43,22 @@ export class AuthService {
     async verifyToken(token: string) {
         try {
             const payload = await this.tokenService.verifyToken(token);
+            const existingUser = await this.authRepo.findByEmail(payload.email);
 
             if (payload.method === "sign-up") {
-                const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, payload.email));
 
                 if (existingUser.length > 0) {
                     throw new ConflictException("User already exists.");
                 };
 
-                const [newUser] = await db.insert(usersTable).values({
-                    name: payload.name,
-                    email: payload.email,
-                }).returning();
+                const [newUser] = await this.authRepo.createUser({ name: payload.name, email: payload.email });
                 return { accessToken: this.tokenService.generateAccessToken(newUser) };
             };
 
             if (payload.method === "sign-in") {
-                const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, payload.email));
 
                 if (existingUser.length === 0) {
-                    throw new NotFoundException("User not Found.");
+                    throw new UnauthorizedException("Invalid credentials.");
                 };
 
                 return { accessToken: this.tokenService.generateAccessToken(existingUser[0]) };
@@ -88,11 +78,12 @@ export class AuthService {
         };
     };
 
-    async profile(IUser: IUser) {
-        const user = await db.select().from(usersTable).where(eq(usersTable.email, IUser.email));
-        if (user.length === 0) {
-            throw new NotFoundException('user not found');
+    async profile(user: IUser) {
+        const existingUser = await this.authRepo.findByEmail(user.email);
+
+        if (existingUser.length === 0) {
+            throw new NotFoundException('User not found');
         };
-        return user;
+        return { user: existingUser[0] };
     };
 };

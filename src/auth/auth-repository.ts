@@ -3,10 +3,20 @@ import { eq } from "drizzle-orm";
 import { db } from 'src/db/drizzle';
 import { usersTable } from "src/db/schema";
 
+// interfaces 
+import { IUser } from "./types/user-type";
+
 
 @Injectable()
-export class AuthRepository {
+export class AuthRepositoryService {
     findByEmail(email: string) {
         return db.select().from(usersTable).where(eq(usersTable.email, email));
+    };
+
+    createUser(user: IUser) {
+        return db.insert(usersTable).values({
+            name: user.name,
+            email: user.email,
+        }).returning();
     };
 };
