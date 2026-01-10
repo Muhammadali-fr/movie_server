@@ -114,9 +114,7 @@ export class AuthService {
     };
 
     async profile(IUser: IUser) {
-        console.log("IUser:", IUser)
         const user = await db.select().from(usersTable).where(eq(usersTable.email, IUser.email));
-        console.log("user:", user)
         if (user.length === 0) {
             throw new NotFoundException('user not found');
         };
