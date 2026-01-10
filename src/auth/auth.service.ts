@@ -3,73 +3,47 @@ import { db } from 'src/db/drizzle';
 import { usersTable } from 'src/db/schema';
 import { eq } from 'drizzle-orm';
 import { JwtService } from '@nestjs/jwt';
-import { MailerService } from 'src/mailer/mailer.service';
 import { signUpDto } from './dto/sign-up.dto';
 import { signInDto } from './dto/sign-in.dto';
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { IUser } from './types/user-type';
+import { TokenService } from './token.service';
+import { SendAuthMagicLink } from './magic-link.service';
 
-const SHORT_EXPIRE_DATE = "5m";
-const LONG_EXPIRE_DATE = "23d";
+let METHOD: "sign-in" | "sign-up" | null = null;
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
-        private mailer: MailerService,
+        private tokenService: TokenService,
+        private magicLinkService: SendAuthMagicLink
     ) { }
 
-    sendMagicLink(token: string, email: string, method: "sign-up" | "sign-in") {
-        const link = `${process.env.FRONTEND_URL}/auth/${method}?token=${token}`;
-        this.mailer.sendMail(
-            email,
-            `<a href="${link}"><button style="background-color: #6D28D9; color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer;">Click here to Continue</button></a>`,
-            "Save your movies for later!"
-        );
-
-        return {
-            message: `Message sent to ${email}, please verify your email to complete registration.`,
-        };
-    };
-
-    generateAccessToken(user: IUser) {
-        return this.jwtService.sign({
-            id: user.id,
-            email: user.email,
-        }, { expiresIn: LONG_EXPIRE_DATE });
-    };
-
     async signUp(signUpDto: signUpDto) {
-        const method = "sign-up";
+        METHOD = "sign-up";
         const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, signUpDto.email));
 
         if (existingUser.length > 0) {
             throw new ConflictException("User already exists.");
         };
 
-        const token = this.jwtService.sign({
-            email: signUpDto.email,
-            name: signUpDto.name,
-            method,
-        }, { expiresIn: SHORT_EXPIRE_DATE });
-
-        return this.sendMagicLink(token, signUpDto.email, method);
+        const user = existingUser[0];
+        const token = this.tokenService.magicLinkToken({ email: user.email, method: METHOD });
+        return this.magicLinkService.sendMagicLink({ token, email: user.email });
     };
 
     async signIn(signInDto: signInDto) {
-        const method = "sign-in";
+        METHOD = "sign-in";
         const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, signInDto.email));
 
         if (existingUser.length === 0) {
             throw new NotFoundException("User not found.");
         };
 
-        const token = this.jwtService.sign({
-            email: signInDto.email,
-            method,
-        }, { expiresIn: SHORT_EXPIRE_DATE });
-
-        return this.sendMagicLink(token, signInDto.email, method);
+        const user = existingUser[0];
+        const token = this.tokenService.magicLinkToken({ email: user.email, method: METHOD });
+        return this.magicLinkService.sendMagicLink({ token, email: user.email });
     };
 
     async verifyToken(token: string) {
@@ -87,8 +61,7 @@ export class AuthService {
                     name: payload.name,
                     email: payload.email,
                 }).returning();
-
-                return { accessToken: this.generateAccessToken(newUser) };
+                return { accessToken: this.tokenService.generateAccessToken(newUser) };
             };
 
             if (payload.method === "sign-in") {
@@ -98,8 +71,10 @@ export class AuthService {
                     throw new NotFoundException("User not Found.");
                 };
 
-                return { accessToken: this.generateAccessToken(existingUser[0]) };
+                return { accessToken: this.tokenService.generateAccessToken(existingUser[0]) };
             };
+
+            throw new UnauthorizedException("Invalid auth method.");
         } catch (error) {
             if (error instanceof TokenExpiredError) {
                 throw new UnauthorizedException('Token has expired.');
