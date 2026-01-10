@@ -24,8 +24,13 @@ export class TokenService {
 
     magicLinkToken(payload: IMagicLinkToken) {
         return this.jwtService.sign({
+            name: payload.name,
             email: payload.email,
             method: payload.method,
         }, { expiresIn: SHORT_EXPIRE_DATE });
+    };
+
+    verifyToken(token: string) {
+        return this.jwtService.verifyAsync(token);
     };
 };

@@ -2,34 +2,34 @@ import { ConflictException, Injectable, NotFoundException, UnauthorizedException
 import { db } from 'src/db/drizzle';
 import { usersTable } from 'src/db/schema';
 import { eq } from 'drizzle-orm';
-import { JwtService } from '@nestjs/jwt';
 import { signUpDto } from './dto/sign-up.dto';
 import { signInDto } from './dto/sign-in.dto';
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { IUser } from './types/user-type';
 import { TokenService } from './token.service';
 import { SendAuthMagicLink } from './magic-link.service';
+import { AuthRepository } from './auth-repository';
 
 let METHOD: "sign-in" | "sign-up" | null = null;
 
 @Injectable()
 export class AuthService {
     constructor(
-        private jwtService: JwtService,
         private tokenService: TokenService,
-        private magicLinkService: SendAuthMagicLink
+        private magicLinkService: SendAuthMagicLink,
+        private authRepo: AuthRepository
     ) { }
 
     async signUp(signUpDto: signUpDto) {
         METHOD = "sign-up";
-        const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, signUpDto.email));
+        const existingUser = await this.authRepo.findByEmail(signUpDto.email);
 
         if (existingUser.length > 0) {
             throw new ConflictException("User already exists.");
         };
 
         const user = existingUser[0];
-        const token = this.tokenService.magicLinkToken({ email: user.email, method: METHOD });
+        const token = this.tokenService.magicLinkToken({ name: user.name, email: user.email, method: METHOD });
         return this.magicLinkService.sendMagicLink({ token, email: user.email });
     };
 
@@ -48,7 +48,7 @@ export class AuthService {
 
     async verifyToken(token: string) {
         try {
-            const payload = await this.jwtService.verifyAsync(token);
+            const payload = await this.tokenService.verifyToken(token);
 
             if (payload.method === "sign-up") {
                 const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, payload.email));

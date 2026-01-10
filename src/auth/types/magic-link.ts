@@ -4,6 +4,7 @@ export interface ISendMagicLink {
 };
 
 export interface IMagicLinkToken {
+    name?:string;
     email: string;
     method: "sign-in" | "sign-up";
 };
