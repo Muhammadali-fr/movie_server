@@ -20,7 +20,7 @@ export class AuthService {
         const METHOD: "sign-up" = "sign-up";
         const existingUser = await this.authRepo.findByEmail(signUpDto.email);
         if (existingUser.length > 0) {
-            throw new ConflictException("User already exists.");
+            throw new ConflictException("User already exists. Please sign in.");
         };
 
         const token = this.tokenService.magicLinkToken({ name: signUpDto.name, email: signUpDto.email, method: METHOD });
@@ -29,10 +29,14 @@ export class AuthService {
 
     async signIn(signInDto: signInDto) {
         const METHOD: "sign-in" = "sign-in";
-        const existingUser = await this.authRepo.findByEmail(signInDto.email);
+        const [existingUser] = await this.authRepo.findByEmail(signInDto.email);
 
-        if (existingUser.length === 0) {
+        if (!existingUser) {
             throw new UnauthorizedException("Invalid credentials.");
+        };
+
+        if (existingUser.provider === "google") {
+            throw new ConflictException("User signed up using Google, so use Google for signing in.");
         };
 
         const user = existingUser[0];
