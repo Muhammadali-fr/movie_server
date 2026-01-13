@@ -1,7 +1,13 @@
-import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
+import { timestamp, pgEnum, text, uuid, pgTable } from "drizzle-orm/pg-core";
+
+export const ProviderEnum = pgEnum("provider", ["email", "google"]);
 
 export const usersTable = pgTable("users", {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    name: varchar({ length: 255 }).notNull(),
-    email: varchar({ length: 255 }).notNull().unique(),
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: text("email").notNull().unique(),
+    name: text("name").notNull(),
+    avatar: text("avatar"),
+    provider: ProviderEnum("provider").notNull().default('email'),
+    googleId: text("googleId"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
 });

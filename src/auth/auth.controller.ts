@@ -3,7 +3,6 @@ import { signUpDto } from './dto/sign-up.dto';
 import { AuthService } from './auth.service';
 import { signInDto } from './dto/sign-in.dto';
 import { AuthGuard } from './guards/auth.guard';
-import type { IUser } from './types/user-type';
 
 @Controller('auth')
 export class AuthController {
