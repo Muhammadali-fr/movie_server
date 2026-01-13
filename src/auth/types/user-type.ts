@@ -3,3 +3,11 @@ export interface IUser{
     name: string;
     email: string;
 }
+
+export interface IGoogleUser{
+    email:string;
+    name:string;
+    avatar?:string;
+    provider: "google"| "email";
+    googleId?:string;
+}

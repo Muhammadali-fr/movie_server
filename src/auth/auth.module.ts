@@ -7,6 +7,7 @@ import { TokenService } from './token.service';
 import "dotenv/config"; 
 import { SendAuthMagicLink } from './magic-link.service';
 import { AuthRepositoryService } from './auth-repository';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { AuthRepositoryService } from './auth-repository';
     MailerModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService,TokenService, SendAuthMagicLink, AuthRepositoryService]
+  providers: [AuthService,TokenService, SendAuthMagicLink, AuthRepositoryService, GoogleStrategy]
 })
 export class AuthModule { }

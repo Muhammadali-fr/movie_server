@@ -2,7 +2,7 @@ import { ConflictException, Injectable, NotFoundException, UnauthorizedException
 import { signUpDto } from './dto/sign-up.dto';
 import { signInDto } from './dto/sign-in.dto';
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
-import { IUser } from './types/user-type';
+import { IGoogleUser, IUser } from './types/user-type';
 import { TokenService } from './token.service';
 import { SendAuthMagicLink } from './magic-link.service';
 import { AuthRepositoryService } from './auth-repository';
@@ -38,6 +38,14 @@ export class AuthService {
         const user = existingUser[0];
         const token = this.tokenService.magicLinkToken({ email: user.email, method: METHOD });
         return this.magicLinkService.sendMagicLink({ token, email: user.email });
+    };
+
+    async googleLogin(payload: IGoogleUser) {
+        const [user] = await this.authRepo.findByEmail(payload.email);
+
+        if(!user){
+            const newUser = await this.authRepo.createGoogleUser(payload);
+        };
     };
 
     async verifyToken(token: string) {

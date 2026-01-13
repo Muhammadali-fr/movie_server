@@ -1,7 +1,7 @@
 import "dotenv/config"
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
-import { Strategy } from "passport-google-oauth20";
+import { Profile, Strategy } from "passport-google-oauth20";
 
 
 @Injectable()
@@ -10,16 +10,18 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         super({
             clientID: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            callbackURL: 'http://localhost:3001/auth/google/callback',
+            callbackURL: 'http://localhost:8000/auth/google/callback',
             scope: ["email", "profile"],
         });
     };
 
-    async validate(accessToken: string, refreshToken: string, profile: any) {
+    async validate(accessToken: string, refreshToken: string, profile: Profile) {
         return {
-            email: profile.emails[0].value,
-            name: profile.displayName,
-            provider: 'google',
+            email: profile.emails?.[0]?.value,
+            name: profile.name?.givenName,
+            avatar: profile.photos?.[0].value,
+            provider: "google",
+            googleId: profile.id,
         };
     };
 };

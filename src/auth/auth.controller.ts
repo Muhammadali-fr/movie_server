@@ -2,7 +2,8 @@ import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/comm
 import { signUpDto } from './dto/sign-up.dto';
 import { AuthService } from './auth.service';
 import { signInDto } from './dto/sign-in.dto';
-import { AuthGuard } from './guards/auth.guard';
+import { MagicLinkGuard } from './guards/auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -32,9 +33,21 @@ export class AuthController {
         return this.authService.verifyToken(token);
     };
 
-    @UseGuards(AuthGuard)
+    @UseGuards(MagicLinkGuard)
     @Get("profile")
     profile(@Req() req: any) {
         return this.authService.profile(req.user);
+    };
+
+    @Get("google")
+    @UseGuards(AuthGuard("google"))
+    googleLogin(): void { };
+
+    @Get("google/callback")
+    @UseGuards(AuthGuard("google"))
+    googleCallBack(
+        @Req() req: any
+    ) {
+        return this.authService.googleLogin(req.user);
     };
 };
