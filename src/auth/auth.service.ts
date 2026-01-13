@@ -43,9 +43,16 @@ export class AuthService {
     async googleLogin(payload: IGoogleUser) {
         const [user] = await this.authRepo.findByEmail(payload.email);
 
-        if(!user){
-            const newUser = await this.authRepo.createGoogleUser(payload);
+        if (!user) {
+            const [newUser] = await this.authRepo.createGoogleUser(payload);
+            return { accessToken: this.tokenService.generateAccessToken(newUser) }
         };
+
+        if (user.provider !== 'google') {
+            throw new ConflictException('This account was created using email login. Please sign in using email.');
+        };
+
+        return { accessToken: this.tokenService.generateAccessToken(user) };
     };
 
     async verifyToken(token: string) {
