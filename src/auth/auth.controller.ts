@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import "dotenv/config"
+import { Body, Controller, Get, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { signUpDto } from './dto/sign-up.dto';
 import { AuthService } from './auth.service';
 import { signInDto } from './dto/sign-in.dto';
 import { MagicLinkGuard } from './guards/auth.guard';
 import { AuthGuard } from '@nestjs/passport';
+import type { Response } from "express";
 
 @Controller('auth')
 export class AuthController {
@@ -41,13 +43,20 @@ export class AuthController {
 
     @Get("google")
     @UseGuards(AuthGuard("google"))
-    googleLogin(): void { };
+    googleLogin(): void {
+        return;
+    };
 
     @Get("google/callback")
     @UseGuards(AuthGuard("google"))
-    googleCallBack(
-        @Req() req: any
+    async googleCallBack(
+        @Req() req: any,
+        @Res() res: Response
     ) {
-        return this.authService.googleLogin(req.user);
+        const { accessToken } = await this.authService.googleLogin(req.user);
+        const redirectUrl =
+            `${process.env.FRONTEND_URL}/auth/google/callback?accessToken=${encodeURIComponent(accessToken)}`;
+
+        return res.redirect(redirectUrl);
     };
 };
