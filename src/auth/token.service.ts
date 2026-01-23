@@ -6,7 +6,7 @@ import { IUser } from "./types/user-type";
 import { IMagicLinkToken } from "./types/magic-link";
 
 // constantas 
-const SHORT_EXPIRE_DATE = "5m";
+const SHORT_EXPIRE_DATE = "15m";
 const LONG_EXPIRE_DATE = "23d";
 
 @Injectable()
@@ -15,11 +15,18 @@ export class TokenService {
         private jwtService: JwtService
     ) { }
 
-    generateAccessToken(payload: IUser) {
-        return this.jwtService.sign({
+    generateTokens(payload: IUser) {
+        const accessToken = this.jwtService.sign({
+            id: payload.id,
+            email: payload.email,
+        }, { expiresIn: SHORT_EXPIRE_DATE });
+
+        const refreshToken = this.jwtService.sign({
             id: payload.id,
             email: payload.email,
         }, { expiresIn: LONG_EXPIRE_DATE });
+        
+        return { accessToken, refreshToken };
     };
 
     magicLinkToken(payload: IMagicLinkToken) {

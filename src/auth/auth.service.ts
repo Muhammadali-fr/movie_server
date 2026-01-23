@@ -39,9 +39,8 @@ export class AuthService {
             throw new ConflictException("User signed up using Google, so use Google for signing in.");
         };
 
-        const user = existingUser[0];
-        const token = this.tokenService.magicLinkToken({ email: user.email, method: METHOD });
-        return this.magicLinkService.sendMagicLink({ token, email: user.email });
+        const token = this.tokenService.magicLinkToken({ email: existingUser.email, method: METHOD });
+        return this.magicLinkService.sendMagicLink({ token, email: existingUser.email });
     };
 
     async googleLogin(payload: IGoogleUser) {
@@ -49,14 +48,14 @@ export class AuthService {
 
         if (!user) {
             const [newUser] = await this.authRepo.createGoogleUser(payload);
-            return { accessToken: this.tokenService.generateAccessToken(newUser) }
+            return this.tokenService.generateTokens(newUser);
         };
 
         if (user.provider !== 'google') {
             throw new ConflictException('This account was created using email login. Please sign in using email.');
         };
 
-        return { accessToken: this.tokenService.generateAccessToken(user) };
+        return this.tokenService.generateTokens(user);
     };
 
     async verifyToken(token: string) {
@@ -71,7 +70,7 @@ export class AuthService {
                 };
 
                 const [newUser] = await this.authRepo.createUser({ name: payload.name, email: payload.email });
-                return { accessToken: this.tokenService.generateAccessToken(newUser) };
+                return this.tokenService.generateTokens(newUser);
             };
 
             if (payload.method === "sign-in") {
@@ -80,7 +79,7 @@ export class AuthService {
                     throw new UnauthorizedException("Invalid credentials.");
                 };
 
-                return { accessToken: this.tokenService.generateAccessToken(existingUser[0]) };
+                return this.tokenService.generateTokens(existingUser[0]);
             };
 
             throw new UnauthorizedException("Invalid auth method.");

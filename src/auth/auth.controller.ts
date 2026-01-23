@@ -27,12 +27,27 @@ export class AuthController {
         return this.authService.signIn(signInDto);
     };
 
-    @Get("verify-token")
-    verifyToken(
+    @Get("verify")
+    async verifyToken(
         @Query() data: { token: string },
+        @Res() res: Response
     ) {
-        const token = data.token;
-        return this.authService.verifyToken(token);
+        const { accessToken, refreshToken } = await this.authService.verifyToken(data.token);
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false,
+            maxAge: 15 * 60 * 1000,
+        });
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false,
+            maxAge: 23 * 24 * 60 * 60 * 1000,
+        });
+        return { message: "tokens set correctly" };
     };
 
     @UseGuards(MagicLinkGuard)
@@ -53,9 +68,9 @@ export class AuthController {
         @Req() req: any,
         @Res() res: Response
     ) {
-        const { accessToken } = await this.authService.googleLogin(req.user);
+        const { accessToken, refreshToken } = await this.authService.googleLogin(req.user);
         const redirectUrl =
-            `${process.env.FRONTEND_URL}/auth/google/callback?accessToken=${encodeURIComponent(accessToken)}`;
+            `${process.env.FRONTEND_URL}/auth/google/callback?accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}`;
 
         return res.redirect(redirectUrl);
     };
