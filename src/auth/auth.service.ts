@@ -96,12 +96,12 @@ export class AuthService {
         };
     };
 
-    async profile(user: IUser) {
-        const existingUser = await this.authRepo.findByEmail(user.email);
+    async profile(payload: IUser) {
+        const [user] = await this.authRepo.findByEmail(payload.email);
 
-        if (existingUser.length === 0) {
+        if (!user) {
             throw new NotFoundException('User not found');
         };
-        return { user: existingUser[0] };
+        return { user };
     };
 };

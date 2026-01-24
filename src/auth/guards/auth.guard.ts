@@ -9,23 +9,17 @@ export class MagicLinkGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext) {
         const request = context.switchToHttp().getRequest();
-        const authHeader = request.headers['authorization'];
 
-        if (!authHeader) {
-            throw new UnauthorizedException('Token topilmadi (Token header yoq)');
-        };
-
-        const [type, token] = authHeader.split(" ");
-        if (type !== 'Bearer' || !token) {
-            throw new UnauthorizedException('Token toplmadi (Bearer header yoq)');
-        }
+        const token: string | undefined = request.cookies?.accessToken;
+        if (!token)
+            throw new UnauthorizedException('Access token cookie not found');
 
         try {
             const decoded = await this.jwtService.verifyAsync(token);
             request.user = decoded;
             return true;
         } catch (error) {
-            throw new UnauthorizedException('Token notogri');
+            throw new UnauthorizedException('Access token is invalid or expired');
         };
     };
 };

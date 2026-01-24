@@ -47,7 +47,8 @@ export class AuthController {
             secure: false,
             maxAge: 23 * 24 * 60 * 60 * 1000,
         });
-        return { message: "tokens set correctly" };
+
+        res.json({message:"setting up cookie"});
     };
 
     @UseGuards(MagicLinkGuard)
@@ -69,9 +70,7 @@ export class AuthController {
         @Res() res: Response
     ) {
         const { accessToken, refreshToken } = await this.authService.googleLogin(req.user);
-        const redirectUrl =
-            `${process.env.FRONTEND_URL}/auth/google/callback?accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}`;
 
-        return res.redirect(redirectUrl);
+        return res.redirect(process.env.FRONTEND_URL as string);
     };
 };
