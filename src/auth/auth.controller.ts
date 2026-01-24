@@ -48,7 +48,7 @@ export class AuthController {
             maxAge: 23 * 24 * 60 * 60 * 1000,
         });
 
-        res.json({message:"setting up cookie"});
+        res.json({ message: "setting up cookie" });
     };
 
     @UseGuards(MagicLinkGuard)
@@ -71,6 +71,20 @@ export class AuthController {
     ) {
         const { accessToken, refreshToken } = await this.authService.googleLogin(req.user);
 
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false,
+            maxAge: 15 * 60 * 1000,
+        });
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false,
+            maxAge: 23 * 24 * 60 * 60 * 1000,
+        });
+
         return res.redirect(process.env.FRONTEND_URL as string);
-    };
+    }; 
 };

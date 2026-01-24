@@ -15,6 +15,15 @@ export class TokenService {
         private jwtService: JwtService
     ) { }
 
+    generateAccessToken(payload: { id: string, email: string }) {
+        const accessToken = this.jwtService.sign({
+            id: payload.id,
+            email: payload.email,
+        }, { expiresIn: SHORT_EXPIRE_DATE });
+
+        return { accessToken };
+    };
+
     generateTokens(payload: IUser) {
         const accessToken = this.jwtService.sign({
             id: payload.id,
@@ -25,7 +34,7 @@ export class TokenService {
             id: payload.id,
             email: payload.email,
         }, { expiresIn: LONG_EXPIRE_DATE });
-        
+
         return { accessToken, refreshToken };
     };
 
