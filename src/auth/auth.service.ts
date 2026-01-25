@@ -43,7 +43,7 @@ export class AuthService {
         return this.magicLinkService.sendMagicLink({ token, email: existingUser.email });
     };
 
-    async googleLogin(payload: IGoogleUser) {
+    async googleLogin(payload: IGoogleUser, res: any) {
         const [user] = await this.authRepo.findByEmail(payload.email);
 
         if (!user) {
@@ -52,7 +52,7 @@ export class AuthService {
         };
 
         if (user.provider !== 'google') {
-            throw new ConflictException('This account was created using email login. Please sign in using email.');
+            res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in`);
         };
 
         return this.tokenService.generateTokens(user);
