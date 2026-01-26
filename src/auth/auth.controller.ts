@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { Body, Controller, Get, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { signUpDto } from './dto/sign-up.dto';
 import { AuthService } from './auth.service';
 import { signInDto } from './dto/sign-in.dto';
@@ -86,5 +86,12 @@ export class AuthController {
         });
 
         return res.redirect(process.env.FRONTEND_URL as string);
-    }; 
+    };
+
+    @Post("logout")
+    logout(@Res() res: Response) {
+        res.clearCookie("accessToken");
+        res.clearCookie("refreshToken");
+        return res.json({ message: "Logged out successfully" });
+    };
 };
