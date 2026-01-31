@@ -32,7 +32,7 @@ export class AuthService {
         const [existingUser] = await this.authRepo.findByEmail(signInDto.email);
 
         if (!existingUser) {
-            throw new UnauthorizedException("Invalid credentials.");
+            throw new UnauthorizedException("User does not exist. Please sign up.");
         };
 
         if (existingUser.provider === "google") {
