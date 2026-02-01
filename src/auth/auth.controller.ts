@@ -6,6 +6,7 @@ import { signInDto } from './dto/sign-in.dto';
 import { MagicLinkGuard } from './guards/auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from "express";
+import path from "path";
 
 @Controller('auth')
 export class AuthController {
@@ -39,6 +40,7 @@ export class AuthController {
             sameSite: "lax",
             secure: false,
             maxAge: 15 * 60 * 1000,
+            path: "/",
         });
 
         res.cookie("refreshToken", refreshToken, {
@@ -46,6 +48,7 @@ export class AuthController {
             sameSite: "lax",
             secure: false,
             maxAge: 23 * 24 * 60 * 60 * 1000,
+            path: "/",
         });
 
         res.json({ message: "setting up cookie" });
@@ -76,6 +79,7 @@ export class AuthController {
             sameSite: "lax",
             secure: false,
             maxAge: 15 * 60 * 1000,
+            path: "/",
         });
 
         res.cookie("refreshToken", refreshToken, {
@@ -83,6 +87,7 @@ export class AuthController {
             sameSite: "lax",
             secure: false,
             maxAge: 23 * 24 * 60 * 60 * 1000,
+            path: "/",
         });
 
         return res.redirect(process.env.FRONTEND_URL as string);

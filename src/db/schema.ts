@@ -11,3 +11,13 @@ export const usersTable = pgTable("users", {
     googleId: text("googleId"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
+
+export const moviesTable = pgTable("movies", {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid("userId")
+        .notNull()
+        .references(() => usersTable.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    moviePoster: text("moviePoster"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
