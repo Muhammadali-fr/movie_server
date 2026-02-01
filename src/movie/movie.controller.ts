@@ -8,11 +8,11 @@ export class MovieController {
 
 
     @Post("upload")
-    @UseInterceptors(FileInterceptor('thumbnail'))
+    @UseInterceptors(FileInterceptor('moviePoster'))
     uploadMovie(
         @Body() body: { title: string },
-        @UploadedFile() thumbnail: Express.Multer.File
+        @UploadedFile() moviePoster: Express.Multer.File
     ) {
-        return this.movieService.uploadMovie(body, thumbnail);
+        return this.movieService.uploadMovie(body, moviePoster);
     };
 };
