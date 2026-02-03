@@ -16,92 +16,92 @@ export class AuthService {
         private authRepo: AuthRepositoryService
     ) { }
 
-    // async signUp(signUpDto: signUpDto) {
-    //     const METHOD: "sign-up" = "sign-up";
-    //     const existingUser = await this.authRepo.findByEmail(signUpDto.email);
-    //     if (existingUser.length > 0) {
-    //         throw new ConflictException("User already exists. Please sign in.");
-    //     };
+    async signUp(signUpDto: signUpDto) {
+        const METHOD: "sign-up" = "sign-up";
+        const existingUser = await this.authRepo.findByEmail(signUpDto.email);
+        if (existingUser) {
+            throw new ConflictException("User already exists. Please sign in.");
+        };
 
-    //     const token = this.tokenService.magicLinkToken({ name: signUpDto.name, email: signUpDto.email, method: METHOD });
-    //     return this.magicLinkService.sendMagicLink({ token, email: signUpDto.email });
-    // };
+        const token = this.tokenService.magicLinkToken({ name: signUpDto.name, email: signUpDto.email, method: METHOD });
+        return this.magicLinkService.sendMagicLink({ token, email: signUpDto.email });
+    };
 
-    // async signIn(signInDto: signInDto) {
-    //     const METHOD: "sign-in" = "sign-in";
-    //     const [existingUser] = await this.authRepo.findByEmail(signInDto.email);
+    async signIn(signInDto: signInDto) {
+        const METHOD: "sign-in" = "sign-in";
+        const existingUser = await this.authRepo.findByEmail(signInDto.email);
 
-    //     if (!existingUser) {
-    //         throw new UnauthorizedException("User does not exist. Please sign up.");
-    //     };
+        if (!existingUser) {
+            throw new UnauthorizedException("User does not exist. Please sign up.");
+        };
 
-    //     if (existingUser.provider === "google") {
-    //         throw new ConflictException("User signed up using Google, so use Google for signing in.");
-    //     };
+        if (existingUser.provider === "google") {
+            throw new ConflictException("User signed up using Google, so use Google for signing in.");
+        };
 
-    //     const token = this.tokenService.magicLinkToken({ email: existingUser.email, method: METHOD });
-    //     return this.magicLinkService.sendMagicLink({ token, email: existingUser.email });
-    // };
+        const token = this.tokenService.magicLinkToken({ email: existingUser.email, method: METHOD });
+        return this.magicLinkService.sendMagicLink({ token, email: existingUser.email });
+    };
 
-    // async googleLogin(payload: IGoogleUser, res: any) {
-    //     const [user] = await this.authRepo.findByEmail(payload.email);
+    async googleLogin(payload: IGoogleUser, res: any) {
+        const user = await this.authRepo.findByEmail(payload.email);
 
-    //     if (!user) {
-    //         const [newUser] = await this.authRepo.createGoogleUser(payload);
-    //         return this.tokenService.generateTokens(newUser);
-    //     };
+        if (!user) {
+            const [newUser] = await this.authRepo.createGoogleUser(payload);
+            return this.tokenService.generateTokens(newUser);
+        };
 
-    //     if (user.provider !== 'google') {
-    //         res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in`);
-    //     };
+        if (user.provider !== 'google') {
+            res.redirect(`${process.env.FRONTEND_URL}/auth/sign-in`);
+        };
 
-    //     return this.tokenService.generateTokens(user);
-    // };
+        return this.tokenService.generateTokens(user);
+    };
 
-    // async verifyToken(token: string) {
-    //     try {
-    //         const payload = await this.tokenService.verifyToken(token);
-    //         const [existingUser] = await this.authRepo.findByEmail(payload.email);
+    async verifyToken(token: string) {
+        try {
+            const payload = await this.tokenService.verifyToken(token);
+            const existingUser = await this.authRepo.findByEmail(payload.email);
 
-    //         if (payload.method === "sign-up") {
+            if (payload.method === "sign-up") {
 
-    //             if (existingUser) {
-    //                 throw new ConflictException("User already exists.");
-    //             };
+                if (existingUser) {
+                    throw new ConflictException("User already exists.");
+                };
 
-    //             const [newUser] = await this.authRepo.createUser({ name: payload.name, email: payload.email });
-    //             return this.tokenService.generateTokens(newUser);
-    //         };
+                const [newUser] = await this.authRepo.createUser({ name: payload.name, email: payload.email });
+                return this.tokenService.generateTokens(newUser);
+            };
 
-    //         if (payload.method === "sign-in") {
+            if (payload.method === "sign-in") {
 
-    //             if (!existingUser) {
-    //                 throw new UnauthorizedException("User does not exist.");
-    //             };
+                if (!existingUser) {
+                    throw new UnauthorizedException("User does not exist.");
+                };
 
-    //             return this.tokenService.generateTokens(existingUser);
-    //         };
+                return this.tokenService.generateTokens(existingUser);
+            };
 
-    //         throw new UnauthorizedException("Invalid auth method.");
-    //     } catch (error) {
-    //         if (error instanceof TokenExpiredError) {
-    //             throw new UnauthorizedException('Token has expired.');
-    //         };
+            throw new UnauthorizedException("Invalid auth method.");
+        } catch (error) {
+            if (error instanceof TokenExpiredError) {
+                throw new UnauthorizedException('Token has expired.');
+            };
 
-    //         if (error instanceof JsonWebTokenError) {
-    //             throw new UnauthorizedException('Invalid token.');
-    //         };
+            if (error instanceof JsonWebTokenError) {
+                throw new UnauthorizedException('Invalid token.');
+            };
 
-    //         throw new UnauthorizedException('Unauthorized.');
-    //     };
-    // };
+            throw new UnauthorizedException('Unauthorized.');
+        };
+    };
 
     async profile(payload: IUser) {
-        await this.authRepo.findByEmail(payload.email);
+        const user = await this.authRepo.findByEmail(payload.email);
 
-        return { message: "Profile fetched successfully" }        //     throw new NotFoundException('User not found');
-        // };
-        // return { user };
-
+        if (!user) {
+            throw new NotFoundException('User not found');
+        };
+        return user;
     };
 };

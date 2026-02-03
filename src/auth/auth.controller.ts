@@ -14,45 +14,45 @@ export class AuthController {
         private authService: AuthService
     ) { }
 
-    // @Post("sign-up")
-    // SignUp(
-    //     @Body() signUpDto: signUpDto
-    // ) {
-    //     return this.authService.signUp(signUpDto);
-    // };
+    @Post("sign-up")
+    SignUp(
+        @Body() signUpDto: signUpDto
+    ) {
+        return this.authService.signUp(signUpDto);
+    };
 
-    // @Post("sign-in")
-    // signIn(
-    //     @Body() signInDto: signInDto
-    // ) {
-    //     return this.authService.signIn(signInDto);
-    // };
+    @Post("sign-in")
+    signIn(
+        @Body() signInDto: signInDto
+    ) {
+        return this.authService.signIn(signInDto);
+    };
 
-    // @Get("verify")
-    // async verifyToken(
-    //     @Query() data: { token: string },
-    //     @Res() res: Response
-    // ) {
-    //     const { accessToken, refreshToken } = await this.authService.verifyToken(data.token);
+    @Get("verify")
+    async verifyToken(
+        @Query() data: { token: string },
+        @Res() res: Response
+    ) {
+        const { accessToken, refreshToken } = await this.authService.verifyToken(data.token);
 
-    //     res.cookie("accessToken", accessToken, {
-    //         httpOnly: true,
-    //         sameSite: "lax",
-    //         secure: false,
-    //         maxAge: 15 * 60 * 1000,
-    //         path: "/",
-    //     });
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false,
+            maxAge: 15 * 60 * 1000,
+            path: "/",
+        });
 
-    //     res.cookie("refreshToken", refreshToken, {
-    //         httpOnly: true,
-    //         sameSite: "lax",
-    //         secure: false,
-    //         maxAge: 23 * 24 * 60 * 60 * 1000,
-    //         path: "/",
-    //     });
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false,
+            maxAge: 23 * 24 * 60 * 60 * 1000,
+            path: "/",
+        });
 
-    //     res.json({ message: "setting up cookie" });
-    // };
+        res.json({ message: "setting up cookie" });
+    };
 
     @UseGuards(MagicLinkGuard)
     @Get("profile")
@@ -66,32 +66,32 @@ export class AuthController {
         return;
     };
 
-    // @Get("google/callback")
-    // @UseGuards(AuthGuard("google"))
-    // async googleCallBack(
-    //     @Req() req: any,
-    //     @Res() res: any
-    // ) {
-    //     const { accessToken, refreshToken } = await this.authService.googleLogin(req.user, res);
+    @Get("google/callback")
+    @UseGuards(AuthGuard("google"))
+    async googleCallBack(
+        @Req() req: any,
+        @Res() res: any
+    ) {
+        const { accessToken, refreshToken } = await this.authService.googleLogin(req.user, res);
 
-    //     res.cookie("accessToken", accessToken, {
-    //         httpOnly: true,
-    //         sameSite: "lax",
-    //         secure: false,
-    //         maxAge: 15 * 60 * 1000,
-    //         path: "/",
-    //     });
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false,
+            maxAge: 15 * 60 * 1000,
+            path: "/",
+        });
 
-    //     res.cookie("refreshToken", refreshToken, {
-    //         httpOnly: true,
-    //         sameSite: "lax",
-    //         secure: false,
-    //         maxAge: 23 * 24 * 60 * 60 * 1000,
-    //         path: "/",
-    //     });
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false,
+            maxAge: 23 * 24 * 60 * 60 * 1000,
+            path: "/",
+        });
 
-    //     return res.redirect(process.env.FRONTEND_URL as string);
-    // };
+        return res.redirect(process.env.FRONTEND_URL as string);
+    };
 
     @Post("logout")
     logout(@Res() res: Response) {
