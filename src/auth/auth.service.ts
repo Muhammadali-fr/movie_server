@@ -96,8 +96,8 @@ export class AuthService {
         };
     };
 
-     profile(payload: IUser) {
-        const user = this.authRepo.findByEmail(payload.email);
+    async profile(payload: IUser) {
+        const user = await this.authRepo.findByEmail(payload.email);
 
         if (!user) {
             throw new NotFoundException('User not found');
