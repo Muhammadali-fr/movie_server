@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { eq } from "drizzle-orm";
 import { db } from 'src/db/drizzle';
-import { usersTable } from "src/db/schema";
+import { moviesTable, usersTable } from "src/db/schema";
 
 // interfaces 
 import { IGoogleUser, IUser } from "./types/user-type";
@@ -9,8 +9,14 @@ import { IGoogleUser, IUser } from "./types/user-type";
 
 @Injectable()
 export class AuthRepositoryService {
-    findByEmail(email: string) {
-        return db.select().from(usersTable).where(eq(usersTable.email, email));
+    async findByEmail(email: string) {
+        const user = await db.query.usersTable.findFirst({
+            where: eq(usersTable.email, email),
+            with: {
+                movies:true
+            },
+        });
+        console.log('Fetched User:', user);
     };
 
     createUser(user: IUser) {
