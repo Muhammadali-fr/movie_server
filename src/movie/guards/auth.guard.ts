@@ -10,8 +10,6 @@ export class MovieGuard implements CanActivate {
     async canActivate(context: ExecutionContext) {
         const request = context.switchToHttp().getRequest();
         const { accessToken } = request.cookies;
-        console.log('Request Cookies:', request.cookies);
-        console.log('Access Token:', accessToken);
 
         if (!accessToken)
             throw new UnauthorizedException('Access token cookie not found');
@@ -23,5 +21,5 @@ export class MovieGuard implements CanActivate {
         } catch (error) {
             throw new UnauthorizedException('Access token is invalid or expired');
         };
-    };
+    };  
 };
