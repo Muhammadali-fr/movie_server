@@ -10,12 +10,20 @@ import { IGoogleUser, IUser } from "./types/user-type";
 @Injectable()
 export class AuthRepositoryService {
     async findByEmail(email: string) {
-         return await db.query.usersTable.findFirst({
+        return await db.query.usersTable.findFirst({
             where: eq(usersTable.email, email),
             with: {
-                movies:true
+                movies: true
             },
         });
+    };
+
+    async findProfileByEmail(email: string) {
+        const user = await db.query.usersTable.findFirst({
+            where: eq(usersTable.email, email)
+        });
+        console.log("findProfileByEmailuser: ", user)
+        return user;
     };
 
     createUser(user: IUser) {

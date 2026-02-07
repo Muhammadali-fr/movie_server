@@ -44,24 +44,30 @@ export class AwsService {
             throw new HttpException("SVG files are not allowed.", HttpStatus.BAD_REQUEST);
         }
 
-        const fileName = `${uuid()}.webp`;
+        const allowed = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+        if (!allowed.has(file.mimetype)) {
+            throw new HttpException("Only JPG/PNG/WebP/AVIF allowed.", HttpStatus.BAD_REQUEST);
+        }
+
+        const key = `public/${uuid()}.webp`;
 
         try {
             const optimizedBuffer = await sharp(file.buffer)
-                .resize({ width: 600, height: 800, fit: "cover" })
+                .resize({ width: 800, height: 450, fit: "cover" })
                 .toFormat("webp", { quality: 60 })
                 .toBuffer();
 
             await this.s3.send(
                 new PutObjectCommand({
                     Bucket: this.bucket,
-                    Key: fileName,
+                    Key: key,
                     Body: optimizedBuffer,
                     ContentType: "image/webp",
+                    CacheControl: "public, max-age=31536000, immutable",
                 }),
             );
 
-            const url = `https://${this.bucket}.s3.${this.region}.amazonaws.com/${fileName}`;
+            const url = `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
             return { url };
         } catch (error: any) {
             this.logger.error(`Failed to upload image: ${error?.message}`, error?.stack);
