@@ -37,7 +37,7 @@ export class AuthRepositoryService {
         return db.insert(usersTable).values({
             name: user.name,
             email: user.email,
-            avatar: user.email,
+            avatar: user.avatar,
             googleId: user.googleId,
             provider: user.provider,
         }).returning();

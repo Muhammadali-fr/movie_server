@@ -27,7 +27,7 @@ export class MagicLinkGuard implements CanActivate {
                 secure: false,
                 maxAge: 15 * 60 * 1000,
             });
-            request.user = decoded;
+            request.user = decoded; 
             return true;
         };
 
