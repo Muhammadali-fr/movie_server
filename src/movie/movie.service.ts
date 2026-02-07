@@ -12,6 +12,7 @@ export class MovieService {
 
     async uploadMovie(user: IUser, body: { title: string }, moviePoster: Express.Multer.File) {
         const { url: moviePosterUrl } = await this.aws.uploadMoviePoster(moviePoster);
+
         const [movie] = await db.insert(moviesTable)
             .values({
                 title: body.title,

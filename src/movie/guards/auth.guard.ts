@@ -9,17 +9,17 @@ export class MovieGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext) {
         const request = context.switchToHttp().getRequest();
-        const { accessToken } = request.cookies;
+        const { refreshToken } = request.cookies;
 
-        if (!accessToken)
-            throw new UnauthorizedException('Access token cookie not found');
+        if (!refreshToken)
+            throw new UnauthorizedException('Refresh token cookie not found');
 
         try {
-            const decoded = await this.jwtService.verifyAsync(accessToken);
+            const decoded = await this.jwtService.verifyAsync(refreshToken);
             request.user = decoded;
             return true;
         } catch (error) {
-            throw new UnauthorizedException('Access token is invalid or expired');
+            throw new UnauthorizedException('Refresh token is invalid or expired');
         };
-    };  
+    };
 };
