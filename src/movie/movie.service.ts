@@ -3,6 +3,7 @@ import { AwsService } from 'src/aws/aws.service';
 import { IUser } from './types/user-type';
 import { db } from 'src/db/drizzle';
 import { moviesTable } from 'src/db/schema';
+import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class MovieService {
@@ -21,6 +22,10 @@ export class MovieService {
             }).returning();
 
         return movie;
+    };
+
+    async getMovies(userId: string) {
+        return await db.select().from(moviesTable).where(eq(moviesTable.userId, userId));
     };
 };
 

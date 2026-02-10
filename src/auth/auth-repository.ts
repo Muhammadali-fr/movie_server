@@ -22,7 +22,6 @@ export class AuthRepositoryService {
         const user = await db.query.usersTable.findFirst({
             where: eq(usersTable.email, email)
         });
-        console.log("findProfileByEmailuser: ", user)
         return user;
     };
 
