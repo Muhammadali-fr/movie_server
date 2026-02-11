@@ -27,5 +27,9 @@ export class MovieService {
     async getMovies(userId: string) {
         return await db.select().from(moviesTable).where(eq(moviesTable.userId, userId));
     };
+
+    async getAllMovies() {
+        return await db.select().from(moviesTable);
+    };
 };
 

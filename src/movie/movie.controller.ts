@@ -23,4 +23,9 @@ export class MovieController {
     getMovies(@Req() req: any) {
         return this.movieService.getMovies(req.user.id);
     };
+
+    @Get("all")
+    getALlMovies() {
+        return this.movieService.getAllMovies();
+    };
 };
