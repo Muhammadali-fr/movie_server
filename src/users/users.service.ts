@@ -11,7 +11,7 @@ export class UsersService {
         const username = (raw ?? "").trim();
 
         if (!USERNAME_RE.test(username)) {
-            return { ok: false, available: false, reason: "invalid" as const };
+            return { available: false, reason: "invalid username" };
         };
 
         const existing = await db.query.usersTable.findFirst({
@@ -21,7 +21,7 @@ export class UsersService {
 
         console.log("existing", existing);
 
-        return { ok: true, available: !existing };
+        return { available: !existing };
     };
 
     async setUsername(userId: string, raw: string) {
