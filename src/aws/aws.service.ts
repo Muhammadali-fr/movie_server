@@ -74,4 +74,60 @@ export class AwsService {
             throw new HttpException("An error occurred while uploading the image.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    async uploadUserAvatar(
+        file: Express.Multer.File,
+        userId: string,
+    ): Promise<{ url: string; key: string }> {
+        if (!file) throw new HttpException("No file provided", HttpStatus.BAD_REQUEST);
+
+        // Optional but recommended: size limit (10MB)
+        const MAX = 10 * 1024 * 1024;
+        if (file.size > MAX) {
+            throw new HttpException("Max file size is 10MB.", HttpStatus.BAD_REQUEST);
+        }
+
+        // Block SVG (scriptable)
+        if (file.mimetype === "image/svg+xml") {
+            this.logger.warn(`Blocked SVG upload: ${file.originalname}`);
+            throw new HttpException("SVG files are not allowed.", HttpStatus.BAD_REQUEST);
+        }
+
+        const allowed = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+        if (!allowed.has(file.mimetype)) {
+            throw new HttpException("Only JPG/PNG/WebP/AVIF allowed.", HttpStatus.BAD_REQUEST);
+        }
+
+        // Put avatars in a dedicated folder, scoped per user
+        const key = `avatars/${userId}/${uuid()}.webp`;
+
+        try {
+            // Square avatar crop; adjust size to your UI needs
+            const optimizedBuffer = await sharp(file.buffer)
+                .rotate() // respects EXIF orientation (common phone issue)
+                .resize({ width: 256, height: 256, fit: "cover" })
+                .toFormat("webp", { quality: 75 })
+                .toBuffer();
+
+            await this.s3.send(
+                new PutObjectCommand({
+                    Bucket: this.bucket,
+                    Key: key,
+                    Body: optimizedBuffer,
+                    ContentType: "image/webp",
+                    CacheControl: "public, max-age=31536000, immutable",
+                }),
+            );
+
+            const url = `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
+            return { url, key };
+        } catch (error: any) {
+            this.logger.error(`Failed to upload avatar: ${error?.message}`, error?.stack);
+            throw new HttpException(
+                "An error occurred while uploading the avatar.",
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
 }
